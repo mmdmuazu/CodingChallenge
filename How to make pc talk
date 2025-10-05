@@ -1,0 +1,96 @@
+		# How to make you pc talk on boot or after login // on kali
+		
+	first thing we need is tools,
+		       Tools
+	.espeak -> text to seach
+	.alsa-utils -> to play audio
+	.ffmpeg -> to save audio if needed (optional)
+
+		       Commands to run
+	1.sudo apt install -y espeak alsa-utils ffmpeg
+	#for installation of the tools
+	2.aplay -l
+	#list your sound devices if avalable else no sound device
+
+	#you will see somthing like card 1 PCH [HDA Intel PCH],device0:ALC3235 Analog [ALC3235 Analog]
+	#that means your sound device is plughw:1,0
+	3.espeak "Hello World" --stdout | aplay -D plughw:1,0 -
+	# to test the playback if you hear hello world its working
+
+	lets create a system wide service
+
+	command: sudo nano /etc/systemd/system/play-name-boot.service
+
+	paste this
+	[Unit]
+	Description=Say my name at boot
+	After=sound.target
+
+	[Service]
+	Type=oneshot
+	ExecStart=/bin/sh -c '/usr/bin/espeak "System" --stdout | /usr/bin/aplay -D plughw:1,0 -'
+	RemainAfterExit=yes
+
+	[Install]
+	WantedBy=multi-user.target
+
+	ctr+X enter 
+
+	then reload and enable
+	command: sudo systemctl daemon-reload
+	command :sudo systemctl enable play-name-boot.service
+
+	you can test it without rebooting
+
+	command : sudo systemctl start play-name-boot.services
+
+		                            On LogIn
+		                            
+	make a directory is it doesn't exist
+	command: mkdir -p ~/.config/systemd/user
+
+	then create the file 
+	command: nano ~/.config/systemd/user/play-name-login.service
+
+	PASTE THIS
+	[Unit]
+	Description=Say my name after login
+	After=default.target
+
+	[Service]
+	Type=oneshot
+	ExecStart=/bin/sh -c '/usr/bin/espeak "Welcome back Muhammad" --stdout | /usr/bin/aplay -D plughw:1,0 -'
+
+	[Install]
+	WantedBy=default.target
+
+	then activate it
+	command: systemctl --user daemon-reload
+	command: systemctl --user enable --now play-name-login.service
+
+
+	   Ramaining this are how to adjust the voice 
+	   
+	 the volume language the voices speed and so on
+	 
+	 Voices Male and female
+	 command: espeak -voices #to see the voices help
+	 female voice
+	 command: espeak -v en+f1 "hello world" # from f1 to f4 is a female 
+		               VOICE
+	 male voice 
+	 command:espeak -v en+m1 "hello male" # from m1 to m4 is am male voice
+	 
+	 
+		              SPEED
+	 -S
+	 120 = slower
+	 220 = faster
+	 command:espeak -s 120 "hello slow"
+	 
+	 
+			      pitch
+	-P
+	80 = younger
+	20 = deeper
+
